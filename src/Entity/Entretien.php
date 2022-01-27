@@ -2,11 +2,34 @@
 
 namespace App\Entity;
 
-use App\Repository\EntretienRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\EntretienRepository;
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Annotation\ApiSubresource;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 
 /**
  * @ORM\Entity(repositoryClass=EntretienRepository::class)
+ * @ApiResource(
+ * subresourceOperations={
+ *      "api_candidats_entretiens_get_subresource"={
+ *          "normalization_context"={"groups"={"entretien_subresouce_candidat"}}
+ *       },
+ *      "api_travails_entretiens_get_subresource"={
+ *           "normalization_context"={"groups"={"entretien_subresouce_travail"}}
+ *      }
+ * },
+ *  attributes={
+ *      "order":{"date":"desc"}
+ * },
+ * normalizationContext={
+ *  "groups"={"entretien_read"}
+ * })
+ * 
+ * @ApiFilter(SearchFilter::class, properties={"lieu":"partial", "date":"partial"})
  */
 class Entretien
 {
@@ -14,35 +37,43 @@ class Entretien
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({"entretien_read", "travail_read", "entretien_subresouce_candidat", "entretien_subresouce_travail"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="date")
+     * @Assert\NotBlank(message="La date de l'entretien est obligatoire!")
+     *  @Groups({"entretien_read", "travail_read", "entretien_subresouce_candidat", "entretien_subresouce_travail"})
      */
     private $date;
 
     /**
-     * @ORM\Column(type="time")
-     */
-    private $heure;
-
-    /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(message="Le lieu de l'entretien est obligatoire!")
+     * @Assert\Length(
+     *      min=3,
+     *      max=254,
+     *      minMessage="Le lieu devrait avoir au minimum '{{ limit }}' caractères!",
+     *      maxMessage="Le Lieu devrait avoir au maximum '{{ limit }}' caractères!"
+     * )
+     * @Groups({"entretien_read", "travail_read", "entretien_subresouce_candidat", "entretien_subresouce_travail"})
      */
     private $lieu;
 
     /**
      * @ORM\ManyToOne(targetEntity=Candidat::class, inversedBy="entretiens")
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({"entretien_read", "travail_read", "entretien_subresouce_travail"})
      */
     private $candidat;
 
     /**
      * @ORM\ManyToOne(targetEntity=Travail::class, inversedBy="entretiens")
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({"entretien_read", "entretien_subresouce_candidat"})
      */
-    private $Travail;
+    private $travail;
 
     public function getId(): ?int
     {
@@ -57,18 +88,6 @@ class Entretien
     public function setDate(\DateTimeInterface $date): self
     {
         $this->date = $date;
-
-        return $this;
-    }
-
-    public function getHeure(): ?\DateTimeInterface
-    {
-        return $this->heure;
-    }
-
-    public function setHeure(\DateTimeInterface $heure): self
-    {
-        $this->heure = $heure;
 
         return $this;
     }
@@ -99,12 +118,12 @@ class Entretien
 
     public function getTravail(): ?Travail
     {
-        return $this->Travail;
+        return $this->travail;
     }
 
-    public function setTravail(?Travail $Travail): self
+    public function setTravail(?Travail $travail): self
     {
-        $this->Travail = $Travail;
+        $this->travail = $travail;
 
         return $this;
     }
