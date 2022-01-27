@@ -18,7 +18,11 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
  * @ApiResource(
  * normalizationContext={
  *      "groups":{"travail_read"}
+ * },
+ * denormalizationContext={
+ * "disable_type_enforcement"=true
  * })
+ * )
  * @ApiFilter(SearchFilter::class, properties={"description":"partial"})
  */
 class Travail
@@ -37,10 +41,15 @@ class Travail
      * @Assert\Length(
      *      min=3,
      *      max=254,
-     *      minMessage="La description devrait avoir au minimum '{{ limit }}' caractères!",
-     *      maxMessage="La description devrait avoir au maximum '{{ limit }}' caractères!"
+     *      minMessage="La description doit avoir au minimum '{{ limit }}' caractères!",
+     *      maxMessage="La description doit avoir au maximum '{{ limit }}' caractères!"
      * )
      * @Groups({"travail_read", "entretien_read", "entretien_subresouce_candidat"})
+     * 
+     * @Assert\Type(
+     *     type="string",
+     *     message="le type de la description n'est pas valide (String)"
+     * )
      */
     private $description;
 
@@ -66,7 +75,7 @@ class Travail
         return $this->description;
     }
 
-    public function setDescription(string $description): self
+    public function setDescription($description): self
     {
         $this->description = $description;
 

@@ -24,12 +24,16 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  * },
  * normalizationContext={
  *      "groups":{"candidat_read"}
+ * },
+ * denormalizationContext={
+ *  "disable_type_enforcement"=true
  * })
  * 
  * @ApiFilter(SearchFilter::class, properties={"nomComplet":"partial"})
  * @ApiFilter(OrderFilter::class, properties={"nomComplet"})
  * @UniqueEntity(fields="email", message="email: {{ value }} appartient déjà à un autre candidat!")
  * @UniqueEntity(fields="contact", message="contact: {{ value }} appartient déjà à un autre candidat!")
+ * @UniqueEntity(fields="nomComplet", message="{{ value }} Existe déjà dans la base de données!")
  */
 class Candidat
 {
@@ -45,6 +49,16 @@ class Candidat
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank(message="Le nom est obligatoire!")
      * @Groups({"candidat_read", "entretien_read", "travail_read", "entretien_subresouce_travail"})
+     * @Assert\Type(
+     *     type="String",
+     *     message="le type du nom n'est pas valide (String)"
+     * )
+     * @Assert\Length(
+     *      min=2,
+     *      max=255,
+     *      minMessage="Le nom doit avoir au minimum '{{ limit }}' caractères!",
+     *      maxMessage="le nom doit avoir au maximum '{{ limit }}' caractères!"
+     * )
      */
     private $nomComplet;
 
@@ -59,12 +73,26 @@ class Candidat
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank(message="L'adrèsse est obligatoire!")
      * @Groups({"candidat_read"})
+     * @Assert\Type(
+     *     type="string",
+     *     message="le type de l'adrèsse n'est pas valide (string)"
+     * )
+     * @Assert\Length(
+     *      min=2,
+     *      max=255,
+     *      minMessage="Un adrèsse doit avoir au minimum '{{ limit }}' caractères!",
+     *      maxMessage="Un adrèsse doit avoir au maximum '{{ limit }}' caractères!"
+     * )
      */
     private $adresse;
 
     /**
      * @ORM\Column(type="array", nullable=true)
      * @Groups({"candidat_read"})
+     *  @Assert\Type(
+     *     type="array",
+     *     message="les compétences doit être un tableau (array)"
+     * )
      */
     private $competences = [];
 
@@ -72,6 +100,16 @@ class Candidat
      * @ORM\Column(type="string", length=20)
      * @Assert\NotBlank(message="Le contact est obligatoire!")
      * @Groups({"candidat_read", "entretien_subresouce_travail"})
+     * @Assert\Type(
+     *     type="string",
+     *     message="le type du contact n'est pas valide (string)"
+     * )
+     * @Assert\Length(
+     *      min=2,
+     *      max=20,
+     *      minMessage="Tel doit avoir au minimum '{{ limit }}' caractères!",
+     *      maxMessage="Tel doit avoir au maximum '{{ limit }}' caractères!"
+     * )
      */
     private $contact;
 
@@ -82,8 +120,8 @@ class Candidat
      * @Assert\Length(
      *      min=6,
      *      max=254,
-     *      minMessage="Un email devrait avoir au minimum '{{ limit }}' caractères!",
-     *      maxMessage="Un email devrait avoir au maximum '{{ limit }}' caractères!"
+     *      minMessage="Un email doit avoir au minimum '{{ limit }}' caractères!",
+     *      maxMessage="Un email doit avoir au maximum '{{ limit }}' caractères!"
      * )
      * @Groups({"candidat_read", "entretien_read", "travail_read", "entretien_subresouce_travail"})
      */
@@ -110,7 +148,7 @@ class Candidat
         return $this->nomComplet;
     }
 
-    public function setNomComplet(string $nomComplet): self
+    public function setNomComplet($nomComplet): self
     {
         $this->nomComplet = $nomComplet;
 
@@ -146,7 +184,7 @@ class Candidat
         return $this->competences;
     }
 
-    public function setCompetences(?array $competences): self
+    public function setCompetences($competences): self
     {
         $this->competences = $competences;
 

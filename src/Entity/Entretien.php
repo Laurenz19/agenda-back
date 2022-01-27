@@ -9,6 +9,7 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Annotation\ApiSubresource;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 
 /**
@@ -22,14 +23,17 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
  *           "normalization_context"={"groups"={"entretien_subresouce_travail"}}
  *      }
  * },
- *  attributes={
+ * attributes={
  *      "order":{"date":"desc"}
  * },
  * normalizationContext={
  *  "groups"={"entretien_read"}
+ * },
+ * denormalizationContext={
+ * "disable_type_enforcement"=true
  * })
  * 
- * @ApiFilter(SearchFilter::class, properties={"lieu":"partial", "date":"partial"})
+ * @ApiFilter(SearchFilter::class, properties={"lieu":"partial", "date":"exact", "heure":"exact"})
  */
 class Entretien
 {
@@ -44,7 +48,12 @@ class Entretien
     /**
      * @ORM\Column(type="date")
      * @Assert\NotBlank(message="La date de l'entretien est obligatoire!")
-     *  @Groups({"entretien_read", "travail_read", "entretien_subresouce_candidat", "entretien_subresouce_travail"})
+     * @Groups({"entretien_read", "travail_read", "entretien_subresouce_candidat", "entretien_subresouce_travail"})
+     * 
+     * @Assert\Type(
+     *     type="date",
+     *     message="le type du date n'est pas valide (date)"
+     * )
      */
     private $date;
 
@@ -54,10 +63,14 @@ class Entretien
      * @Assert\Length(
      *      min=3,
      *      max=254,
-     *      minMessage="Le lieu devrait avoir au minimum '{{ limit }}' caractères!",
-     *      maxMessage="Le Lieu devrait avoir au maximum '{{ limit }}' caractères!"
+     *      minMessage="Le lieu doit avoir au minimum '{{ limit }}' caractères!",
+     *      maxMessage="Le Lieu doit avoir au maximum '{{ limit }}' caractères!"
      * )
      * @Groups({"entretien_read", "travail_read", "entretien_subresouce_candidat", "entretien_subresouce_travail"})
+     * @Assert\Type(
+     *     type="string",
+     *     message="le type du lieu n'est pas valide (String)"
+     * )
      */
     private $lieu;
 
@@ -74,6 +87,23 @@ class Entretien
      * @Groups({"entretien_read", "entretien_subresouce_candidat"})
      */
     private $travail;
+
+    /**
+     * @ORM\Column(type="string", length=8)
+     * @Assert\Length(
+     *      min=8,
+     *      max=8,
+     *      minMessage="L'heure doit avoir '{{ limit }}' caractères!",
+     *      maxMessage="L'heure doit avoir '{{ limit }}' caractères!",
+     * )
+     * @Groups({"entretien_read", "travail_read", "entretien_subresouce_candidat", "entretien_subresouce_travail"})
+     * @Assert\Type(
+     *     type="string",
+     *     message="le type de l'heure n'est pas valide (String)"
+     * )
+     */
+    private $heure;
+
 
     public function getId(): ?int
     {
@@ -124,6 +154,18 @@ class Entretien
     public function setTravail(?Travail $travail): self
     {
         $this->travail = $travail;
+
+        return $this;
+    }
+
+    public function getHeure(): ?string
+    {
+        return $this->heure;
+    }
+
+    public function setHeure(string $heure): self
+    {
+        $this->heure = $heure;
 
         return $this;
     }

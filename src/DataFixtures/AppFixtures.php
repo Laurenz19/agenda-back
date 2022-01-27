@@ -23,6 +23,7 @@ class AppFixtures extends Fixture
             $manager->persist($travail);
 
             for($c = 0; $c < 10; $c ++){
+               
                 $candidat = new Candidat();
                 $candidat->setNomComplet($faker->name)
                          ->setDateNais(new DateTime($faker->date))
@@ -32,10 +33,10 @@ class AppFixtures extends Fixture
                          ->setCompetences(["Vuejs", "Symfony"]);
     
                          $manager->persist($candidat);
-
-                    
+  
                          $entretien = new Entretien();
                          $entretien->setDate(new DateTime($faker->date))
+                                   ->setHeure($faker->time) 
                                    ->setLieu("tanambao")
                                    ->setCandidat($candidat)
                                    ->setTravail($travail);               
